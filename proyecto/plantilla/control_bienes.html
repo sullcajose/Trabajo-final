@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bienes - Vista de Seguimiento</title>
+
+  <!-- ✅ Bulma CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+
+</head>
+<body>
+  <!-- ✅ Contenedor principal con estilos de Bulma -->
+  <section class="section">
+    <div class="container">
+
+      <h1 class="title is-3">Lista de Bienes</h1>
+
+      <!-- ✅ Campo de búsqueda -->
+      <div class="field">
+        <div class="control">
+          <input type="text" id="searchInput" class="input" placeholder="Buscar bienes" onkeyup="filterTable()">
+        </div>
+      </div>
+
+      <!-- ✅ Tabla visible por defecto con datos de prueba -->
+      <table id="bienes-table" class="table is-striped is-fullwidth">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Cantidad</th>
+            <th>Categoría</th>
+            <th>Estado</th>
+            <th>Nota</th>
+            <th>Controlados</th>
+          </tr>
+        </thead>
+        <tbody id="bienes-table-body">
+          <tr>
+            <td>001</td>
+            <td>Computadora</td>
+            <td>5</td>
+            <td>Electrónica</td>
+            <td>Operativo</td>
+            <td>Ninguna</td>
+            <td><input type="checkbox" class="save-checkbox"></td>
+          </tr>
+          <tr>
+            <td>002</td>
+            <td>Silla</td>
+            <td>10</td>
+            <td>Mobiliario</td>
+            <td>Bueno</td>
+            <td>-</td>
+            <td><input type="checkbox" class="save-checkbox"></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ✅ Botones visibles por defecto -->
+      <div class="buttons">
+        <button class="button is-success" onclick="registrarSeguimiento('Finalizado')">Finalizar</button>
+        <button class="button is-warning" onclick="registrarSeguimiento('Pendiente')">Dejar Pendiente</button>
+      </div>
+
+      <!-- ✅ Campo oculto simulado para la función -->
+      <input type="hidden" id="form-lugar-id" value="123">
+
+    </div>
+  </section>
+
+  <!-- ✅ Script de búsqueda -->
+  <script>
+    function filterTable() {
+      const input = document.getElementById("searchInput");
+      const filter = input.value.toLowerCase();
+      const tbody = document.getElementById("bienes-table-body");
+      const rows = tbody.getElementsByTagName("tr");
+
+      for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName("td");
+        let match = false;
+
+        for (let j = 0; j < cells.length; j++) {
+          if (cells[j]) {
+            const txtValue = cells[j].textContent || cells[j].innerText;
+            if (txtValue.toLowerCase().indexOf(filter) > -1) {
+              match = true;
+              break;
+            }
+          }
+        }
+        rows[i].style.display = match ? "" : "none";
+      }
+    }
+
+    function registrarSeguimiento(estado) {
+      const lugar_id = document.getElementById("form-lugar-id").value;
+      if (!lugar_id) {
+        alert("Error: No se ha seleccionado una ubicación.");
+        return;
+      }
+
+      const fecha = new Date().toISOString().split('T')[0];
+
+      const formData = new FormData();
+      formData.append("lugar_id", lugar_id);
+      formData.append("fecha_inicio", fecha);
+      formData.append("fecha_fin", fecha);
+      formData.append("estado_seguimiento", estado);
+
+      fetch("./php/registrar_seguimiento.php", {
+        method: "POST",
+        body: formData
+      })
+      .then(response => response.text())
+      .then(result => {
+        console.log("Respuesta del servidor:", result);
+        alert("Seguimiento guardado con estado: " + estado);
+      })
+      .catch(error => {
+        console.error("Error al registrar seguimiento:", error);
+        alert("Hubo un error al registrar el seguimiento.");
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="./css/bulma.min.css">
+    <link rel="stylesheet" href="./css/estilos.css">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css">
+	<style>
+		body {
+			display: flex;
+			flex-direction: column;
+			min-height: 100vh;
+			background-color: #ffff
+		}
+		.card-container {
+			flex: 1;
+		}
+		footer {
+			background-color: #f5f5f5;
+			text-align: center;
+			padding: 1rem;
+		}
+		.btn-back {
+			margin-top: 60px;
+		}
+	</style>
+	<script>
+		function redirectToAddArea() {
+			window.location.href = 'http://localhost/inventario-definitivo/INVENTARIO-main/index.php?vista=area_new'; // Cambia esto por la URL de la página que deseas
+		}
+	</script>
+</head>
+<body>
+
+	<?php
+	require_once "./inc/btn_back.php"; 
+	require_once "./php/main.php"; 
+	$conexion = conexion();
+	$areas = $conexion->query("SELECT * FROM ubicacion");
+	?>
+
+
+	<div class="form-rest mb-6"></div>
+	<p class="is-family-secondary has-text-weight-bold is-italic has-text-centered is-size-2">Nueva Categoría</p>
+
+	<div class="card-container">
+        <div class="card">
+            <div class="card-body">
+				<form action="./php/categoria_guardar.php" method="POST" class="FormularioAjax" autocomplete="off">
+					<div class="columns">
+					  	<div class="column">
+					    	<div class="control">
+								<label>Nombre</label>
+							  	<input class="input" type="text" name="categoria_nombre" placeholder="Ej: Computadoras" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{4,50}" maxlength="50" required>
+							</div>
+					  	</div>
+					  	<div class="column">
+						    <div class="control">
+						        <label>Ubicación</label>
+						        <select name="categoria_area" id="categoria_area" class="input" required onchange="if(this.value === 'add_area') redirectToAddArea();">
+						            <option value="" disabled selected>Seleccione una ubicación</option>
+									<option value="add_area">Agregar ubicación</option>
+
+
+						            <?php
+						            if ($areas->rowCount() > 0) {
+						                foreach ($areas as $area) {
+						                    echo '<option value="'.$area['area_id'].'">'.$area['area_nombre'].'</option>';
+						                }
+						            } else {
+						                echo '<option value="" disabled>No hay áreas disponibles</option>';
+						            }
+						            ?>
+						        </select>
+						    </div>
+						</div>
+					</div>
+					<p class="has-text-centered">
+						<button type="submit" class="button is-info is-rounded">Guardar</button>
+					</p>
+					
+				</form>
+			</div> 
+		</div> 
+	</div>
+
+</body>
+</html>

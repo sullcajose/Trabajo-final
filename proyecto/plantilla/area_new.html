@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+
+</head>
+<body>
+    <?php
+    require_once "./inc/btn_back.php"; 
+    require_once "./php/main.php"; 
+    $conexion = conexion();
+
+    $areas = $conexion->query("SELECT * FROM ubicacion");
+
+    $lugar = $conexion->query("SELECT * FROM area_fisica"); 
+?>
+
+<br>
+
+<style>
+  		body {
+			display: flex;
+			flex-direction: column;
+			min-height: 100vh;
+			background-color: #ffff
+		}
+		.card-container {
+			flex: 1;
+		}
+		footer {
+			background-color: #f5f5f5;
+			text-align: center;
+			padding: 1rem;
+		}
+		.btn-back {
+			margin-top: 60px;
+		}
+</style>
+<p class="is-family-secondary has-text-weight-bold is-italic has-text-centered is-size-2 2.5rem">Nueva Ubicación</p>
+
+
+<div class="card-container">
+    <div class="card">
+        <div class="card-body">
+            <form action="./php/area_guardar.php" method="POST" class="FormularioAjax" autocomplete="off">
+                <div class="columns">
+                    <div class="column">
+                        <div class="control">
+                            <label>Nombre</label>
+                            <input class="input" type="text" name="area_nombre" placeholder="Ej: Computadoras" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{4,50}" maxlength="50" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="control">
+                        <label>Área</label>
+                        <select name="lugar_id" class="input">
+                            <option value="" disabled selected>Seleccione un área</option>
+
+                            <?php
+                            if ($lugar->rowCount() > 0) {
+                                foreach ($lugar as $lugar) {
+                                    echo '<option value="'.$lugar['lugar_id'].'">'.$lugar['nombre_lugar'].'</option>';
+                                }
+                            } else {
+                                echo '<option value="" disabled>No hay áreas disponibles</option>';
+                            }
+                            ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="has-text-centered mt-4">
+                    <button type="submit" class="button is-info is-rounded">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+</body>
+</html>

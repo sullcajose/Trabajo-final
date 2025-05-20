@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restablecer Contraseña</title>
+    <link rel="stylesheet" href="./css/estilos.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, rgb(71, 139, 212), rgb(6, 63, 124));
+            background-size: 400% 400%;
+            animation: gradientAnimation 8s ease infinite;
+            color: #333;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .main-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            min-width: 300px;
+        }
+
+        .title {
+            color: #333;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .notification {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        .is-success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+
+        .is-danger {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+
+        .input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        .button {
+            background-color: #209cee;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .button:hover {
+            background-color: #187bb5;
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <form class="box" action="./php/restablecer.php" method="POST">
+        <h5 class="title">Restablecer Contraseña</h5>
+
+        <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'success'): ?>
+            <div class="notification is-success">
+                <strong>¡Éxito!</strong> Tu contraseña ha sido restablecida correctamente. Por favor, <a href="index.php?vista=login">inicia sesión</a>.
+            </div>
+        <?php elseif (isset($_GET['mensaje']) && $_GET['mensaje'] == 'error'): ?>
+            <div class="notification is-danger">
+                <strong>¡Error!</strong> El correo electrónico no existe en el sistema. Verifica e intenta nuevamente.
+            </div>
+        <?php endif; ?>
+
+        <div class="field">
+            <label for="email">Correo electrónico:</label>
+            <input class="input" type="email" name="email" id="email" required>
+        </div>
+
+        <div class="field">
+            <label for="nueva_clave">Nueva contraseña:</label>
+            <input class="input" type="password" name="nueva_clave" id="nueva_clave" required>
+        </div>
+
+        <div class="field">
+            <label for="confirmar_clave">Confirmar contraseña:</label>
+            <input class="input" type="password" name="confirmar_clave" id="confirmar_clave" required>
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="button">Restablecer contraseña</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<?php
+require_once "main.php"; // Asegúrate de que esta ruta sea correcta
+
+if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $area_id = $_GET['id'];
+
+    $pdo = conexion();
+
+    // Consultar los datos actuales del área
+    $query = "
+        SELECT u.area_id, u.area_nombre, u.lugar_id, a.nombre_lugar 
+        FROM ubicacion u
+        JOIN area_fisica a ON u.lugar_id = a.lugar_id
+        WHERE u.area_id = :area_id
+    ";
+
+    $stmt = $pdo->prepare($query);
+    $stmt->bindParam(':area_id', $area_id, PDO::PARAM_INT);
+    $stmt->execute();
+
+    // Verificar si se encontró el área
+    if ($stmt->rowCount() > 0) {
+        $area = $stmt->fetch(PDO::FETCH_ASSOC);
+    } else {
+        echo "Área no encontrada.";
+        exit;
+    }
+} else {
+    echo "ID de área inválido.";
+    exit;
+}
+
+// Obtener los lugares disponibles
+$query_lugares = "SELECT lugar_id, nombre_lugar FROM area_fisica";
+$stmt_lugares = $pdo->prepare($query_lugares);
+$stmt_lugares->execute();
+$lugares = $stmt_lugares->fetchAll(PDO::FETCH_ASSOC);
+?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modificar Área</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+   
+        .container {
+            width: 600px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+        }
+        .titulo {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .button.is-primary {
+            background-color: #007BFF;
+            border-color: #007BFF;
+        }
+        .card {
+            width: 100%;
+            padding: 20px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+<body> <br><br> <br>
+<p class="is-family-secondary has-text-weight-bold is-italic has-text-centered is-size-2">Modificar Ubicación</p> <br> <br><br>
+
+<div class="container">
+    <div class="card">
+    <form action="procesar_modificacion_area.php" method="POST">
+        <input type="hidden" name="area_id" value="<?php echo $area['area_id']; ?>">
+
+        <div class="field">
+            <label class="label">Nombre del Área</label>
+            <div class="control">
+                <input class="input" type="text" name="area_nombre" value="<?php echo htmlspecialchars($area['area_nombre']); ?>" required>
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="label">Lugar</label>
+            <div class="control">
+                <div class="select">
+                    <select name="lugar_id" required>
+                        <?php
+                        foreach ($lugares as $lugar) {
+                            $selected = ($lugar['lugar_id'] == $area['lugar_id']) ? 'selected' : '';
+                            echo "<option value='{$lugar['lugar_id']}' $selected>{$lugar['nombre_lugar']}</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="control">
+                <button class="button is-primary" type="submit">Guardar cambios</button>
+                <a href="http://localhost/inventario-definitivo/INVENTARIO-main/index.php?vista=area_list" class="button is-light">Cancelar</a>
+            </div>
+        </div>
+    </form>
+    </div>
+</div>
+
+</body>
+</html>

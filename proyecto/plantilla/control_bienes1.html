@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienes por Área</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+
+    <style>
+        /* Improved and simplified CSS */
+        .container {
+            width: 95%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        #bienes-table {
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        #bienes-table td, #bienes-table th {
+            padding: 15px;
+            text-align: center;
+        }
+
+        .search-container input[type="text"] {
+            width: 50%;
+            max-width: 300px;
+            padding: 10px;
+            border: 2px solid #007BFF;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .buttons-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .form-container .control {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h3 class="title has-text-centered">Bienes del Área</h3>
+        
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Buscar bienes..." onkeyup="filterTable()">
+        </div>
+
+        <table id="bienes-table" class="table is-striped">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Cantidad</th>
+                    <th>Categoría</th>
+                    <th>Estado</th>
+                    <th>Nota</th>
+                    <th>Controlados</th>
+                </tr>
+            </thead>
+            <tbody id="bienes-table-body">
+                <?php if (!empty($bien_por_area)) : ?>
+                    <?php foreach ($bien_por_area as $area_id => $bienes_area): ?>
+                        <tr>
+                            <td colspan="7" style="background-color: #ddd; text-align: center; font-weight: bold;">
+                                <?php echo $bienes_area[0]['area_nombre'];  ?>
+                            </td>
+                        </tr>
+                        <?php foreach ($bienes_area as $bien): ?>
+                            <tr>
+                                <td><?php echo $bien['producto_codigo']; ?></td>
+                                <td><?php echo $bien['producto_nombre']; ?></td>
+                                <td><?php echo $bien['producto_cantidad']; ?></td>
+                                <td><?php echo $bien['categoria_nombre']; ?></td>
+                                <td>
+                                    <select class="estado-select" data-producto-id="<?php echo $bien['producto_id']; ?>">
+                                        <option value="1" <?php echo $bien['estado_id'] == 1 ? 'selected' : ''; ?>>Bueno</option>
+                                        <option value="2" <?php echo $bien['estado_id'] == 2 ? 'selected' : ''; ?>>Regular</option>
+                                        <option value="3" <?php echo $bien['estado_id'] == 3 ? 'selected' : ''; ?>>Malo</option>
+                                    </select>
+                                </td>
+                                <td><input type="text" value="<?php echo $bien['nota']; ?>"></td>
+                                <td><input type="checkbox"></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endforeach; ?>
+                <?php else : ?>
+                    <tr>
+                        <td colspan="7">No hay bienes registrados para esta área.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+
+        <div class="buttons-container">
+            <button class="button is-success" onclick="guardarCambiosYEnviar('Finalizado')">Finalizar</button>
+            <button class="button is-warning" onclick="guardarCambiosYEnviar('Pendiente')">Dejar Pendiente</button>
+        </div>
+    </div>
+
+    <script>
+        function filterTable() {
+            const input = document.getElementById("searchInput");
+            const filter = input.value.toLowerCase();
+            const rows = document.getElementById("bienes-table-body").getElementsByTagName("tr");
+
+            for (let i = 0; i < rows.length; i++) {
+                let cells = rows[i].getElementsByTagName("td");
+                let match = false;
+
+                for (let j = 0; j < cells.length; j++) {
+                    const txtValue = cells[j].textContent || cells[j].innerText;
+                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                        match = true;
+                        break;
+                    }
+                }
+
+                rows[i].style.display = match ? "" : "none";
+            }
+        }
+
+        function guardarCambiosYEnviar(estado) {
+            let updates = [];
+            document.querySelectorAll(".estado-select").forEach(select => {
+                let producto_id = select.dataset.productoId;
+                let estado = select.value;
+                let notaInput = select.closest("tr").querySelector("input[type='text']");
+                let nota = notaInput.value;
+                let checkbox = select.closest("tr").querySelector("input[type='checkbox']");
+
+                if (checkbox.checked) {
+                    updates.push({ producto_id, nota, estado });
+                }
+            });
+
+            if (updates.length === 0) {
+                alert("No hay cambios para guardar.");
+                return;
+            }
+
+            fetch("./php/actualizar_estado.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ updates, estado })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = "http://localhost/inventario-definitivo/INVENTARIO-main/index.php?vista=seguimiento";
+                } else {
+                    alert("Error al guardar los cambios.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Hubo un problema con la conexión.");
+            });
+        }
+    </script>
+</body>
+</html>

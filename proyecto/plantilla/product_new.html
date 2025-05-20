@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario del Bien</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; 
+            background-color: #ffff;
+        }
+        .card-container {
+            flex: 1; 
+        }
+        
+        .btn-back {
+            margin-top: 60px;
+        }
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+        }
+        .quantity-controls button {
+            margin: 0 5px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group-inline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .form-group-inline input {
+            margin-left: 10px; 
+            width: 50px; 
+        }
+    </style>
+</head>
+<body>
+<script>
+    function redirectToAddArea() {
+        window.location.href = 'http://localhost/inventario-definitivo/INVENTARIO-main/index.php?vista=area_new'; 
+    }
+
+    function redirectToAddCategory() {
+        window.location.href = 'http://localhost/inventario-definitivo/INVENTARIO-main/index.php?vista=category_new'; 
+    }
+
+    function handleAreaChange() {
+        var areaSelect = document.getElementById('producto_area');
+        if (areaSelect.value === 'add_area') {
+            redirectToAddArea();
+        }
+    }
+
+    function handleCategoryChange() {
+        var categorySelect = document.getElementById('producto_categoria');
+        if (categorySelect.value === 'add_category') {
+            redirectToAddCategory();
+        }
+    }
+</script>
+
+<?php   
+    require_once "./inc/btn_back.php";
+?>
+<div class="container">
+    <p class="is-family-secondary has-text-weight-bold is-italic has-text-centered is-size-2 2.5rem">Nuevo Bien</p>
+
+    <div class="form-container">
+        <?php
+            require_once "./php/main.php";
+        ?>
+
+        <div class="form-rest mb-6"></div>
+        <div class="card">
+            <div class="card-body">
+                <form action="./php/producto_guardar.php" method="POST" class="FormularioAjax" autocomplete="off">
+                    <div class="form-grid">
+
+                        <div class="form-group">
+                            <label for="producto_nombre">Nombre</label>
+                            <input class="input" type="text" name="producto_nombre" id="producto_nombre" placeholder="Ej: Computadora" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,$#\-\/ ]{1,70}" maxlength="70" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="codigo">Código del bien</label>
+                            <input class="input" type="text" name="producto_codigo" id="producto_codigo" placeholder="Ej:23JSKW2" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,$#\-\/ ]{1,70}" maxlength="70" required>
+                        </div>
+                    
+                        <div class="form-group">
+                            <label for="producto_descripcion">Descripción</label>
+                            <input class="input" type="text" name="producto_descripcion" id="producto_descripcion" placeholder="" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,$#\-\/ ]{1,70}" maxlength="70" required>
+                        </div>
+<div class="form-group">
+    <label for="producto_area">Ubicación</label>
+    <select name="producto_area" id="producto_area" class="input" onchange="handleAreaChange()">
+        <option value="">Seleccione una ubicación</option>
+        <?php
+    $area = conexion();
+
+   
+    $area = $area->query("SELECT u.area_id, u.area_nombre, af.nombre_lugar 
+                          FROM ubicacion u 
+                          JOIN area_fisica af ON u.lugar_id = af.lugar_id");
+
+    if ($area->rowCount() > 0) {
+        $area = $area->fetchAll();
+        foreach ($area as $row) {
+            $display_name = $row['area_nombre'] . ': ' . $row['nombre_lugar'];
+            echo '<option value="'.$row['area_id'].'">'.$display_name.'</option>';
+        }
+    } else {
+        echo '<option value="">No hay áreas disponibles</option>';
+    }
+?>
+
+    </select>
+</div>
+                        <div class="form-group">
+                            <label for="producto_categoria">Categoría</label>
+                            <select name="producto_categoria" id="producto_categoria" class="input" onchange="handleCategoryChange()">
+                                <option value="">Seleccione una categoría</option>
+                                <option value="add_category">Agregar Categoría</option>
+                                <?php
+                                    $categorias = conexion();
+                                    $categorias = $categorias->query("SELECT * FROM categoria");
+                                    if ($categorias->rowCount() > 0) {
+                                        $categorias = $categorias->fetchAll();
+                                        foreach ($categorias as $row) {
+                                            echo '<option value="'.$row['categoria_id'].'">'.$row['categoria_nombre'].'</option>';
+                                        }
+                                    }
+                                    $categorias = null;
+                                ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="producto_estado">Estado</label>
+                            <select name="estado_id" id="estado" class="input">
+                                <option value="Bueno">Bueno</option>
+                                <option value="Regular">Regular</option>
+                                <option value="Malo">Malo</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="producto_origen">Origen</label>
+                            <select name="origen_id" id="origen" class="input">
+                                <option value="Donado">Donado</option>
+                                <option value="Compra de la institución">Compra de la institución</option>
+                                <option value="Premio">Premio</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="producto_cantidad">Cantidad</label>
+                            <div class="quantity-controls">
+                                <button type="button" onclick="decrementarCantidad()">-</button>
+                                <input type="text" id="producto_cantidad" name="producto_cantidad" value="0" min="0" readonly>
+                                <button type="button" onclick="incrementarCantidad()">+</button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="has-text-centered mt-4">
+                        <button type="submit" class="button">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function incrementarCantidad() {
+        var cantidadInput = document.getElementById('producto_cantidad');
+        cantidadInput.value = parseInt(cantidadInput.value) + 1;
+    }
+
+    function decrementarCantidad() {
+        var cantidadInput = document.getElementById('producto_cantidad');
+        if (cantidadInput.value > 0) {
+            cantidadInput.value = parseInt(cantidadInput.value) - 1;
+        }
+    }
+
+    function guardarYRefrescar() {
+        setTimeout(function() {
+            location.reload();
+        }, 1000);
+        return true;
+    }
+</script>
+
+</body>
+</html>

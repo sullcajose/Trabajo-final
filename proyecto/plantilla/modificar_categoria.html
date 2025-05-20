@@ -1,0 +1,112 @@
+<?php
+require_once "main.php"; 
+
+if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $categoria_id = $_GET['id'];
+
+    $pdo = conexion();
+
+    $query = "
+        SELECT c.categoria_id, c.categoria_nombre, c.area_id, u.area_nombre 
+        FROM categoria c
+        JOIN ubicacion u ON c.area_id = u.area_id
+        WHERE c.categoria_id = :categoria_id
+    ";
+
+    $stmt = $pdo->prepare($query);
+    $stmt->bindParam(':categoria_id', $categoria_id, PDO::PARAM_INT);
+    $stmt->execute();
+
+    if ($stmt->rowCount() > 0) {
+        $categoria = $stmt->fetch(PDO::FETCH_ASSOC);
+    } else {
+        echo "Categoría no encontrada.";
+        exit;
+    }
+} else {
+    echo "ID de categoría inválido.";
+    exit;
+}
+
+$query_areas = "SELECT area_id, area_nombre FROM ubicacion";
+$stmt_areas = $pdo->prepare($query_areas);
+$stmt_areas->execute();
+$areas = $stmt_areas->fetchAll(PDO::FETCH_ASSOC);
+?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modificar Categoría</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+        .container {
+            width: 600px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+        }
+        .titulo {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .button.is-primary {
+            background-color: #007BFF;
+            border-color: #007BFF;
+        }
+        .card {
+            width: 100%;
+            padding: 20px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+<body> <br> <br>    <br>
+<p class= "is-family-secondary has-text-weight-bold is-italic has-text-centered is-size-2 2.5rem">Modificar Categorías</p><br><br>  
+<div class="container">
+    <div class="card">
+    <form action="procesar_modificacion.php" method="POST">
+        <input type="hidden" name="categoria_id" value="<?php echo $categoria['categoria_id']; ?>">
+
+        <div class="field">
+            <label class="label">Nombre de la Categoría</label>
+            <div class="control">
+                <input class="input" type="text" name="categoria_nombre" value="<?php echo htmlspecialchars($categoria['categoria_nombre']); ?>" required>
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="label">Área</label>
+            <div class="control">
+                <div class="select">
+                    <select name="area_id" required>
+                        <?php
+                        foreach ($areas as $area) {
+                            $selected = ($area['area_id'] == $categoria['area_id']) ? 'selected' : '';
+                            echo "<option value='{$area['area_id']}' $selected>{$area['area_nombre']}</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="control">
+                <button class="button is-link" type="submit">Guardar cambios</button>
+                <a href="http://localhost/inventario-definitivo/INVENTARIO-main/index.php?vista=category_list" class="button is-light">Cancelar</a>
+            </div>
+        </div>
+    </form>
+    </div>
+</div>
+
+</body>
+</html>

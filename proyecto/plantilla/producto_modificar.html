@@ -1,0 +1,313 @@
+<?php
+    
+    require_once "C:/xampp/htdocs/INVENTARIO-DEFINITIVO/INVENTARIO-main/php/main.php";
+$conexion = conexion();
+
+$product_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Obtener los datos del formulario
+    $producto_codigo = $_POST['producto_codigo'];
+    $producto_nombre = $_POST['producto_nombre'];
+    $producto_cantidad = $_POST['producto_cantidad'];
+    $producto_descripcion = $_POST['producto_descripcion'];
+    $categoria_id = $_POST['categoria_id'];
+    $estado_id = $_POST['estado_id'];
+    $origen_id = $_POST['origen_id']; // Este debe ser un ID numérico
+    $area_id = $_POST['area_id'];
+
+    // Actualizar el producto en la base de datos
+    $consulta_update = "UPDATE producto SET 
+                        producto_codigo = :producto_codigo, 
+                        producto_nombre = :producto_nombre, 
+                        producto_cantidad = :producto_cantidad, 
+                        producto_descripcion = :producto_descripcion,
+                        categoria_id = :categoria_id, 
+                        estado_id = :estado_id, 
+                        origen_id = :origen_id, 
+                        area_id = :area_id 
+                        WHERE producto_id = :product_id";
+
+    $stmt = $conexion->prepare($consulta_update);
+    $stmt->execute([
+        ':producto_codigo' => $producto_codigo,
+        ':producto_nombre' => $producto_nombre,
+        ':producto_cantidad' => $producto_cantidad,
+        ':producto_descripcion' => $producto_descripcion,
+        ':categoria_id' => $categoria_id,
+        ':estado_id' => $estado_id,
+        ':origen_id' => $origen_id, // Asegúrate de que este campo se envíe correctamente
+        ':area_id' => $area_id,
+        ':product_id' => $product_id
+    ]);
+
+    header("Location: http://localhost/inventario-definitivo/INVENTARIO-main/index.php?vista=product_list");
+    exit;
+}
+
+// Obtener los detalles del producto a modificar
+$consulta_producto = "SELECT * FROM producto WHERE producto_id = :product_id";
+$stmt = $conexion->prepare($consulta_producto);
+$stmt->execute([':product_id' => $product_id]);
+$producto = $stmt->fetch();
+
+if (!$producto) {
+    die("Producto no encontrado.");
+}
+
+// Obtener categorías
+$categorias = $conexion->query("SELECT * FROM categoria")->fetchAll();
+
+// Obtener estados
+$estados = ["1" => "Bueno", "2" => "Regular", "3" => "Malo"]; 
+
+// Obtener orígenes
+$origenes = [
+    "1" => "Donación",
+    "2" => "Compra",
+    "3" => "Premio",
+    "7" => "Donado",
+    "8" => "Compra de la institución"
+];
+
+// Obtener áreas
+$areas = $conexion->query("SELECT * FROM ubicacion")->fetchAll();
+
+$conexion = null;
+?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modificar Producto</title>
+    <link rel="stylesheet" href="./css/bulma.min.css">
+    <style>
+        /* Estilos aquí */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #ffff;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .input {
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input:focus {
+            border-color: rgb(12, 91, 210);
+            outline: none;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+        }
+
+        .quantity-controls button {
+            background-color:rgb(12, 91, 210);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .quantity-controls button:hover {
+            background-color:rgb(12, 91, 210);
+        }
+
+        .quantity-controls input {
+            width: 60px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 0 5px;
+        }
+
+        .button {
+            background-color:rgb(12, 91, 210);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color:rgb(12, 91, 210);
+        }
+
+        .has-text-centered {
+            text-align: center;
+        }
+
+        .mt-4 {
+            margin-top: 20px;
+        }
+        .btn-back {
+			margin-top: 60px;
+		}
+    </style>
+</head>
+<body>
+    
+<h1>Modificar Bien</h1>
+
+    <div class="container">
+        <div class="form-container">
+            <div class="card">
+                <div class="card-body">
+                    <form action="producto_modificar.php?id=<?php echo $producto['producto_id']; ?>" method="POST" class="FormularioAjax" autocomplete="off">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="producto_codigo">Código</label>
+                                <input class="input" type="text" name="producto_codigo" value="<?php echo htmlspecialchars($producto['producto_codigo']); ?>" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="producto_nombre">Nombre</label>
+                                <input class="input" type="text" name="producto_nombre" value="<?php echo htmlspecialchars($producto['producto_nombre']); ?>" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="producto_descripcion">Descripción</label>
+                                <input class="input" type="text" name="producto_descripcion" value="<?php echo htmlspecialchars($producto['producto_descripcion']); ?>" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="producto_cantidad">Cantidad</label>
+                                <div class="quantity-controls">
+                                    <button type="button" onclick="decrementarCantidad()">-</button>
+                                    <input type="number" id="producto_cantidad" name="producto_cantidad" value="<?php echo $producto['producto_cantidad']; ?>" min="0" required>
+                                    <button type="button" onclick="incrementarCantidad()">+</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="area_id">Ubicación</label>
+                                <select name="area_id" id="area_id" class="input" required>
+                                    <option value="">Seleccione una ubicación</option>
+                                    <?php
+                                    foreach ($areas as $area) {
+                                        $selected = $area['area_id'] == $producto['area_id'] ? 'selected' : '';
+                                        echo "<option value='{$area['area_id']}' $selected>{$area['area_nombre']}</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="categoria_id">Categoría</label>
+                                <select name="categoria_id" id="categoria_id" class="input" required>
+                                    <option value="">Seleccione una categoría</option>
+                                    <?php
+                                    foreach ($categorias as $categoria) {
+                                        $selected = $categoria['categoria_id'] == $producto['categoria_id'] ? 'selected' : '';
+                                        echo "<option value='{$categoria['categoria_id']}' $selected>{$categoria['categoria_nombre']}</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="estado_id">Estado</label>
+                                <select name="estado_id" id="estado_id" class="input" required>
+                                    <?php
+                                    foreach ($estados as $key => $estado) {
+                                        $selected = $key == $producto['estado_id'] ? 'selected' : '';
+                                        echo "<option value='$key' $selected>$estado</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="origen_id">Origen</label>
+                                <select name="origen_id" id="origen_id" class="input" required>
+                                    <?php
+                                    foreach ($origenes as $key => $origen) {
+                                        $selected = $key == $producto['origen_id'] ? 'selected' : '';
+                                        echo "<option value='$key' $selected>$origen</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="has-text-centered mt-4">
+                            <button type="submit" class="button">Actualizar Bien</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function incrementarCantidad() {
+            var cantidad = document.getElementById('producto_cantidad');
+            cantidad.value = parseInt(cantidad.value) + 1;
+        }
+
+        function decrementarCantidad() {
+            var cantidad = document.getElementById('producto_cantidad');
+            if (parseInt(cantidad.value) > 0) {
+                cantidad.value = parseInt(cantidad.value) - 1;
+            }
+        }
+    </script>
+
+</body>
+</html>

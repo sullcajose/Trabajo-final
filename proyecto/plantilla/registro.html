@@ -1,0 +1,75 @@
+<?php
+session_start(); 
+require_once "./php/main.php"; 
+$conexion = conexion();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['accion'], $_POST['area_id'])) {
+        $accion = $_POST['accion'];
+        $area_id = $_POST['area_id'];
+
+        if (!empty($accion) && !empty($area_id)) {
+            $nuevo_estado = $accion === 'finalizar' ? 'Finalizado' : 'Pendiente';
+
+            // Guardar en sesión para usar en la página de registro
+            $_SESSION['area_id'] = $area_id;
+            $_SESSION['estado_seguimiento'] = $nuevo_estado;
+
+            // Obtener el nombre del área
+            $areaQuery = $conexion->prepare("SELECT area_nombre FROM ubicacion WHERE area_id = :area_id");
+            $areaQuery->bindParam(':area_id', $area_id, PDO::PARAM_INT);
+            $areaQuery->execute();
+            $area = $areaQuery->fetch(PDO::FETCH_ASSOC);
+
+            if ($area) {
+                $_SESSION['area_nombre'] = $area['area_nombre']; // Guardar el nombre del área en la sesión
+            } else {
+                echo "Error: Área no encontrada.";
+                exit();
+            }
+
+            header("Location: ./index.php?vista=registro");
+            exit();
+        } else {
+            echo "Error: Acción o área_id está vacío.";
+        }
+    }
+}
+?>
+
+<!-- Página de Registro -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+
+</head>
+<body>
+    <section class="section">
+        <p class="is-family-secondary has-text-weight-bold is-italic has-text-centered is-size-2">Registrar Seguimiento</p>
+        <div class="table-container">
+            <form method="POST" action="">
+                <div class="field">
+                    <label for="area_nombre">Área:</label>
+                    <input class="input" type="text" name="area_nombre" value="<?= isset($_SESSION['area_nombre']) ? $_SESSION['area_nombre'] : '' ?>" readonly>
+                </div>
+                <div class="field">
+                    <label for="fecha_inicio">Fecha Inicio:</label>
+                    <input class="input" type="date" name="fecha_inicio" required>
+                </div>
+                <div class="field">
+                    <label for="fecha_fin">Fecha Fin:</label>
+                    <input class="input" type="date" name="fecha_fin" required>
+                </div>
+                <div class="field">
+                    <label for="estado_seguimiento">Estado Seguimiento:</label>
+                    <input class="input" type="text" name="estado_seguimiento" value="<?= isset($_SESSION['estado_seguimiento']) ? $_SESSION['estado_seguimiento'] : '' ?>" readonly>
+                </div>
+                <button class="button is-primary" type="submit">Registrar Estado</button>
+            </form>
+        </div>
+    </section>
+</body>
+</html>
